@@ -1,0 +1,11 @@
+
+
+amplify
+build/
+dist/
+node_modules/
+aws-exports.js
+awsconfiguration.json
+.expo
+.watchmanconfig
+package-lock.json

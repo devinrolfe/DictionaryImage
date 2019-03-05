@@ -1,0 +1,17 @@
+projects:
+  getWordDefinition:
+    schemaPath: src/graphql/schema.json
+    includes:
+      - src/graphql/**/*.js
+    excludes:
+      - ./amplify/**
+    extensions:
+      amplify:
+        graphQLApiId: lyppu2lqtvcx7h3uhooyh6lige
+        codeGenTarget: javascript
+        generatedFileName: ''
+        docsFilePath: src/graphql
+        region: us-east-2
+      endpoints:
+        prod: >-
+          ***REMOVED***
