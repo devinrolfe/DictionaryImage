@@ -9,6 +9,10 @@ Amplify.configure(aws_config);
 
 export default class DictionaryTextScreen extends React.Component {
 
+    static navigationOptions = {
+        title: 'TextScreen',
+    };
+
     constructor(props) {
         super(props);
         this.state = {
@@ -25,6 +29,7 @@ export default class DictionaryTextScreen extends React.Component {
 
 
     render() {
+        const {navigate} = this.props.navigation;
         return (
             <View style={styles.container}>
                 <TextInput
@@ -34,6 +39,10 @@ export default class DictionaryTextScreen extends React.Component {
                 />
                 <Button title="Get Definition" onPress={this.getWordDefinition.bind(this)} />
                 <Text>{this.state.definition}</Text>
+                <Button
+                    title="Go to Image Screen"
+                    onPress={() => navigate('Image', {name: 'Image'})}
+                />
             </View>
         );
     }
