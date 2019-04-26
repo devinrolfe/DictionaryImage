@@ -2,23 +2,7 @@ import React from "react";
 import {Text, View, TouchableOpacity, StyleSheet} from "react-native";
 import { Camera, Permissions } from 'expo';
 import { Entypo } from '@expo/vector-icons';
-import Amplify, { API } from "aws-amplify";
-import aws_config from "../../aws-exports";
 var AWS = require('aws-sdk');
-
-
-Amplify.configure({
-    API: {
-        endpoints: [
-            {
-                name: "rekognition",
-                endpoint: "https://rekognition.us-west-2.amazonaws.com",
-                service: "rekognition",
-                region: "us-west-2"
-            }
-        ]
-    }
-});
 
 export default class ImageScreen extends React.Component {
 
@@ -57,27 +41,6 @@ export default class ImageScreen extends React.Component {
             console.log(photo.base64);
             const bytes = photo.base64;
 
-            // ----------------------------------
-
-            const apiName = "rekognition";
-            const path = "/detect-text";
-            const body = { Image: { Bytes: bytes } };
-
-            const headers = {
-                "X-Amz-Target": "RekognitionService.DetectText",
-                "Content-Type": "application/x-amz-json-1.1"
-            };
-
-            const init = {
-                body: body,
-                headers: headers
-            };
-
-            return await API.post(apiName, path, init);
-
-
-            // ----------------------------------
-
             // TODO: Below logic is not good. Photo size is too big. Need to scale size down
             // or investigate upload to s3
             // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Rekognition.html#detectText-property
@@ -99,23 +62,22 @@ export default class ImageScreen extends React.Component {
 
             let params = {
                 Image: {
-                    Bytes: photo.base64
+                    Bytes: bytes
                 }
             };
 
             // TODO
-            // 1. Try to get image directly from file system and try.
-            // 2. if that fails, then try uploading to s3 and then doing the call.
+            // Try uploading to s3 and then doing the call.
 
-            // this.rekognitionClient.detectText(params, function(err, data) {
-            //     if (err) {
-            //         console.log("Bad Call");
-            //         console.log(err);
-            //     } else {
-            //         console.log("Good Call");
-            //         console.log(data);
-            //     }
-            // });
+            this.rekognitionClient.detectText(params, function(err, data) {
+                if (err) {
+                    console.log("Bad Call");
+                    console.log(err);
+                } else {
+                    console.log("Good Call");
+                    console.log(data);
+                }
+            });
 
 
         }
