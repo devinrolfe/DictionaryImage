@@ -54,7 +54,12 @@ export default class ImageScreen extends React.Component {
                         console.log(err);
                     } else {
                         console.log("Good Call");
-                        console.log(data);
+                        // console.log(data);
+
+                        data.TextDetections.forEach(function(textDetections) {
+                           console.log(textDetections.DetectedText);
+                        });
+
                     }
                 });
 
