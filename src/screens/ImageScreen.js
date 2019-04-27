@@ -1,7 +1,8 @@
 import React from "react";
-import {Text, View, TouchableOpacity, StyleSheet} from "react-native";
+import {Text, View, TouchableOpacity} from "react-native";
 import { Camera, Permissions } from 'expo';
 import { Entypo } from '@expo/vector-icons';
+import { Buffer } from 'buffer';
 var AWS = require('aws-sdk');
 
 export default class ImageScreen extends React.Component {
@@ -37,37 +38,13 @@ export default class ImageScreen extends React.Component {
 
             let photo = await this.camera.takePictureAsync({ quality: 0.5, base64: true });
 
-            console.log("PHOTO DATA");
-            console.log(photo.base64);
-            const bytes = photo.base64;
-
-            // TODO: Below logic is not good. Photo size is too big. Need to scale size down
-            // or investigate upload to s3
-            // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Rekognition.html#detectText-property
-            // https://docs.expo.io/versions/latest/sdk/camera/
-            // https://aws.amazon.com/rekognition/faqs/
-            // let is 5MB for Bytes, 15MB for s3
-
-            // resize image to 5MB -
-            // https://stackoverflow.com/questions/50257879/expo-camera-takepictureasync-imagemanipulator
-
-            // let params = {
-            //   Image: {
-            //       S3Object: {
-            //           Bucket: 'images-for-dictionary-image-app',
-            //           Name: 'nike_picture.jpg'
-            //       }
-            //   }
-            // };
+            let buffer = new Buffer(photo.base64, 'base64');
 
             let params = {
-                Image: {
-                    Bytes: bytes
-                }
+              Image: {
+                  Bytes: buffer
+              }
             };
-
-            // TODO
-            // Try uploading to s3 and then doing the call.
 
             this.rekognitionClient.detectText(params, function(err, data) {
                 if (err) {
@@ -113,12 +90,5 @@ export default class ImageScreen extends React.Component {
         }
     };
 };
-
-// TODO: Not in use
-const styles = StyleSheet.create({
-    fullScreenFlex: {
-        flex: 1,
-    },
-});
 
 
