@@ -1,5 +1,5 @@
 import React from "react";
-import {Text, View, TouchableOpacity, StyleSheet} from "react-native";
+import {Text, View, TouchableOpacity, Image, Button, StyleSheet} from "react-native";
 import { Camera, Permissions } from 'expo';
 import { Entypo } from '@expo/vector-icons';
 import { Buffer } from 'buffer';
@@ -8,6 +8,19 @@ var AWS = require('aws-sdk');
 
 export default class ImageScreen extends React.Component {
 
+    static navigationOptions = ({ navigation }) => {
+        return {
+            headerTitle: 'Image Screen',
+            headerRight: (
+                <Button
+                    onPress={() => navigation.getParam('resetCamera').call()}
+                    title="Reset"
+                    color="#000"
+                />
+            ),
+        };
+    };
+
     constructor(props) {
         super(props);
         this.state = {
@@ -15,9 +28,12 @@ export default class ImageScreen extends React.Component {
             type: Camera.Constants.Type.back,
             camera: null,
             isLoading: false,
+            cameraReadyPosition: true,
+            imageTaken: null,
         };
 
         this.snap = this.snap.bind(this);
+        this.resetCamera = this.resetCamera.bind(this);
 
         // setup aws config
         // TODO: accessKeyId, and secretAccessKey need to be encrypted.
@@ -33,6 +49,16 @@ export default class ImageScreen extends React.Component {
     async componentDidMount() {
         const { status } = await Permissions.askAsync(Permissions.CAMERA);
         this.setState({ hasCameraPermission: status === 'granted' });
+        this.props.navigation.setParams({ resetCamera: this.resetCamera });
+    };
+
+    resetCamera = () => {
+        console.log("I Did it");
+        this.setState({
+            cameraReadyPosition: true,
+        }, function() {
+            console.log(this.state.cameraReadyPosition);
+        });
     };
 
     async snap() {
@@ -65,10 +91,12 @@ export default class ImageScreen extends React.Component {
 
                 this.setState({
                     isLoading: false,
-                })
+                    cameraReadyPosition: false,
+                    imageTaken: photo.uri,
+                });
 
                 // TODO:
-                // 1. Need to change screen to the picture that was taken
+                // 1. Need to change screen to the picture that was taken (Done)
                 // 2. Add button on screen to go back to picture taking
                 // 3. Need to parse response from detectText
                 // 4. Need to highlight the text in the saved picture
@@ -81,11 +109,12 @@ export default class ImageScreen extends React.Component {
             this.setState({
                 isLoading: true,
             })
-
+            
         }
     };
 
     render() {
+        const {navigate} = this.props.navigation;
 
         // Loading
         if (this.state.isLoading) {
@@ -96,6 +125,18 @@ export default class ImageScreen extends React.Component {
             );
         }
 
+        // if picture taken
+        if (this.state.imageTaken && !this.state.cameraReadyPosition) {
+            return (
+                <View style={{flex: 1,}}>
+                    <Image
+                        style={{flex:1, height: undefined, width: undefined}}
+                        resizeMode="contain"
+                        source={{uri: this.state.imageTaken}}
+                    />
+                </View>
+            )
+        }
 
         const { hasCameraPermission } = this.state;
 
