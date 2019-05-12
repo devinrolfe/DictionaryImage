@@ -56,6 +56,7 @@ export default class ImageScreen extends React.Component {
         console.log("I Did it");
         this.setState({
             cameraReadyPosition: true,
+            isLoading: false,
         }, function() {
             console.log(this.state.cameraReadyPosition);
         });
