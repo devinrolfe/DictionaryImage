@@ -125,7 +125,7 @@ export default class ImageScreen extends React.Component {
     render() {
         const {navigate} = this.props.navigation;
 
-        // Loading
+        // is Loading
         if (this.state.isLoading) {
             return (
                 <View style={styles.loadingContainer}>
@@ -152,7 +152,7 @@ export default class ImageScreen extends React.Component {
                 </ImageBackground>
             )
         }
-
+        // if camera is ready for picture taken
         const { hasCameraPermission } = this.state;
 
         if (hasCameraPermission === null) {
