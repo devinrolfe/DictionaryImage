@@ -1,9 +1,10 @@
 import React from "react";
 import { Alert, Text, View, TouchableOpacity, Image, Button, ImageBackground, StyleSheet} from "react-native";
-import { Camera, Permissions } from 'expo';
+import { Camera, Permissions, Svg } from 'expo';
 import { Entypo } from '@expo/vector-icons';
 import { Buffer } from 'buffer';
 import Loader from "../utils/Loader";
+
 var AWS = require('aws-sdk');
 
 export default class ImageScreen extends React.Component {
@@ -81,7 +82,7 @@ export default class ImageScreen extends React.Component {
                         console.log(err);
                     } else {
                         console.log("Good Call");
-                        // console.log(data);
+                        console.log(data);
 
                         data.TextDetections.forEach(function(textDetections) {
                            console.log(textDetections.DetectedText);
@@ -97,10 +98,11 @@ export default class ImageScreen extends React.Component {
                 });
 
                 // TODO:
-                // 1. Fix "Unhandled promise rejection: Error: Camera view had been unmounted before image has been captured" (Done)
+                // 1. Need to highlight the text in the saved picture
+                    // https://docs.expo.io/versions/latest/sdk/svg/
                 // 2. Need to parse response from detectText
-                // 3. Need to highlight the text in the saved picture
-                // 4. Need to get definitions of each word (only supporting english)
+                // 3. Need to get definitions of each word (only supporting english)
+                // 4. Rewind SVG drawing
                 // 5. hide accessKeys
 
             })
@@ -137,19 +139,29 @@ export default class ImageScreen extends React.Component {
         // if picture taken
         if (this.state.imageTaken && !this.state.cameraReadyPosition) {
             return (
-                <ImageBackground source={{uri: this.state.imageTaken}} style={{width: '100%', height: '100%'}}>
-                    <View style={{flex: 9,}}></View>
-                    <TouchableOpacity
-                        style={{
-                            alignItems:'center',
-                            flex: 1,
-                        }}
-                        onPress={this.resetCamera}
-                    >
-                        <Entypo name="ccw" size={64} color="white" />
-                    </TouchableOpacity>
-                    <View style={{flex: 0.2,}}></View>
-                </ImageBackground>
+
+                <View>
+                    <ImageBackground source={{uri: this.state.imageTaken}} style={{width: '100%', height: '100%'}}>
+
+                        {/*Example SVG rectangle, will be used to highlight text */}
+                        <Svg height="100%" width="100%">
+                            <Svg.Rect
+                                x="15"
+                                y="15"
+                                width="70"
+                                height="70"
+                                stroke="red"
+                                strokeWidth="2"
+                                fill="yellow"
+                            />
+                        </Svg>
+
+                        {/* Need rewind button */}
+
+                    </ImageBackground>
+                </View>
+
+
             )
         }
         // if camera is ready for picture taken
