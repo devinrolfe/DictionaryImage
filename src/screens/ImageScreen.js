@@ -1,9 +1,11 @@
 import React from "react";
+import Dimensions from 'Dimensions';
 import { Alert, Text, View, TouchableOpacity, Image, Button, ImageBackground, StyleSheet} from "react-native";
 import { Camera, Permissions, Svg } from 'expo';
 import { Entypo } from '@expo/vector-icons';
 import { Buffer } from 'buffer';
 import Loader from "../utils/Loader";
+import Word from "../utils/Word";
 
 var AWS = require('aws-sdk');
 
@@ -31,6 +33,8 @@ export default class ImageScreen extends React.Component {
             isLoading: false,
             cameraReadyPosition: true,
             imageTaken: null,
+            wordsLoaded: false,
+            words: null,
         };
 
         this.snap = this.snap.bind(this);
@@ -51,13 +55,22 @@ export default class ImageScreen extends React.Component {
         const { status } = await Permissions.askAsync(Permissions.CAMERA);
         this.setState({ hasCameraPermission: status === 'granted' });
         this.props.navigation.setParams({ resetCamera: this.resetCamera });
+
+        // get width and height of this element
+        this.setState({
+            dimensions: {
+                width: Dimensions.get('window').width,
+                height: Dimensions.get('window').height,
+            },
+        });
     };
 
     resetCamera = () => {
-        console.log("I Did it");
+        console.log("reset camera");
         this.setState({
             cameraReadyPosition: true,
             isLoading: false,
+            wordsLoaded: false,
         }, function() {
             console.log(this.state.cameraReadyPosition);
         });
@@ -84,26 +97,38 @@ export default class ImageScreen extends React.Component {
                         console.log("Good Call");
                         console.log(data);
 
-                        data.TextDetections.forEach(function(textDetections) {
-                           console.log(textDetections.DetectedText);
+                        data.TextDetections.forEach(function(textDetection) {
+                           console.log(textDetection.DetectedText);
+                        });
+
+                        // filter for type Word, then transform into new object
+                        const words = data.TextDetections
+                            .filter(textDetection => textDetection.Type === 'WORD')
+                            .map((textDetection, index) =>
+                                new Word({
+                                    id: index,
+                                    word: textDetection.DetectedText,
+                                    x: textDetection.Geometry.BoundingBox.Left * this.state.dimensions.width,
+                                    y: textDetection.Geometry.BoundingBox.Top * (this.state.dimensions.height * 0.9),
+                                    width: textDetection.Geometry.BoundingBox.Width * this.state.dimensions.width,
+                                    height: textDetection.Geometry.BoundingBox.Height * this.state.dimensions.height
+                                }));
+
+                        this.setState({
+                            isLoading: false,
+                            words: words,
+                            wordsLoaded: true,
+                            cameraReadyPosition: false,
+                            imageTaken: photo.uri,
                         });
 
                     }
-                });
-
-                this.setState({
-                    isLoading: false,
-                    cameraReadyPosition: false,
-                    imageTaken: photo.uri,
-                });
+                }.bind(this));
 
                 // TODO:
-                // 1. Need to highlight the text in the saved picture
-                    // https://docs.expo.io/versions/latest/sdk/svg/
-                // 2. Need to parse response from detectText
-                // 3. Need to get definitions of each word (only supporting english)
-                // 4. Rewind SVG drawing
-                // 5. hide accessKeys
+                // 1. Need to get definitions of each word (only supporting english)
+                // 2. Rewind SVG drawing
+                // 3. hide accessKeys
 
             })
             .catch(() => {
@@ -116,7 +141,7 @@ export default class ImageScreen extends React.Component {
                 });
             });
 
-            // should do loading
+            // should do loading. This is being done before async is done
             this.setState({
                 isLoading: true,
             })
@@ -137,23 +162,14 @@ export default class ImageScreen extends React.Component {
         }
 
         // if picture taken
-        if (this.state.imageTaken && !this.state.cameraReadyPosition) {
-            return (
+        if (this.state.imageTaken && !this.state.cameraReadyPosition && this.state.wordsLoaded) {
 
+            return (
                 <View>
                     <ImageBackground source={{uri: this.state.imageTaken}} style={{width: '100%', height: '100%'}}>
 
-                        {/*Example SVG rectangle, will be used to highlight text */}
-                        <Svg height="100%" width="100%">
-                            <Svg.Rect
-                                x="15"
-                                y="15"
-                                width="70"
-                                height="70"
-                                stroke="red"
-                                strokeWidth="2"
-                                fill="yellow"
-                            />
+                        <Svg key={this.state.id} height="100%" width="100%">
+                            {this.state.words.map(word => word.render())}
                         </Svg>
 
                         {/* Need rewind button */}
@@ -221,15 +237,4 @@ const styles = StyleSheet.create({
     },
 
 });
-
-
-/*
-
-[Unhandled promise rejection: Error: Camera view had been unmounted before image has been captured]
-- node_modules/react-native/Libraries/BatchedBridge/NativeModules.js:146:41 in createErrorFromErrorData
-- node_modules/react-native/Libraries/BatchedBridge/NativeModules.js:95:55 in <unknown>
-- ... 5 more stack frames from framework internals
-
- */
-
 
