@@ -27,7 +27,6 @@ export default class DictionaryTextScreen extends React.Component {
         this.setState({definition: response.data.getSingleWord.definition});
     }
 
-
     render() {
         const {navigate} = this.props.navigation;
         return (
