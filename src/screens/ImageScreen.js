@@ -5,9 +5,7 @@ import { Camera, Permissions, Svg } from 'expo';
 import { Entypo } from '@expo/vector-icons';
 import { Buffer } from 'buffer';
 import Loader from "../utils/Loader";
-import Word from "../utils/Word";
-
-var AWS = require('aws-sdk');
+import RekognitionClient from "../clients/RekognitionClient";
 
 export default class ImageScreen extends React.Component {
 
@@ -39,16 +37,7 @@ export default class ImageScreen extends React.Component {
 
         this.snap = this.snap.bind(this);
         this.resetCamera = this.resetCamera.bind(this);
-
-        // setup aws config
-        // TODO: accessKeyId, and secretAccessKey need to be encrypted.
-        AWS.config.update({
-            "accessKeyId": "***REMOVED***",
-            "secretAccessKey": "***REMOVED***",
-            "region": "us-east-2"
-        });
-
-        this.rekognitionClient = new AWS.Rekognition();
+        this.rekognitionClient = new RekognitionClient();
     };
 
     async componentDidMount() {
@@ -89,46 +78,27 @@ export default class ImageScreen extends React.Component {
                     }
                 };
 
-                this.rekognitionClient.detectText(params, function(err, data) {
-                    if (err) {
-                        console.log("Bad Call");
-                        console.log(err);
-                    } else {
-                        console.log("Good Call");
-                        console.log(data);
+                const detectedTexts = this.rekognitionClient.detectTexts(params, this.state.dimensions.width, this.state.dimensions.height);
 
-                        data.TextDetections.forEach(function(textDetection) {
-                           console.log(textDetection.DetectedText);
-                        });
+                detectedTexts.then(function(words) {
 
-                        // filter for type Word, then transform into new object
-                        const words = data.TextDetections
-                            .filter(textDetection => textDetection.Type === 'WORD')
-                            .map((textDetection, index) =>
-                                new Word({
-                                    id: index,
-                                    word: textDetection.DetectedText,
-                                    x: textDetection.Geometry.BoundingBox.Left * this.state.dimensions.width,
-                                    y: textDetection.Geometry.BoundingBox.Top * (this.state.dimensions.height * 0.9),
-                                    width: textDetection.Geometry.BoundingBox.Width * this.state.dimensions.width,
-                                    height: textDetection.Geometry.BoundingBox.Height * this.state.dimensions.height
-                                }));
+                    this.setState({
+                        isLoading: false,
+                        words: words,
+                        wordsLoaded: true,
+                        cameraReadyPosition: false,
+                        imageTaken: photo.uri,
+                    });
 
-                        this.setState({
-                            isLoading: false,
-                            words: words,
-                            wordsLoaded: true,
-                            cameraReadyPosition: false,
-                            imageTaken: photo.uri,
-                        });
 
-                    }
+
                 }.bind(this));
 
                 // TODO:
                 // 1. Need to get definitions of each word (only supporting english)
-                // 2. Rewind SVG drawing
+                // 2. Fix orientation image being taken if possible
                 // 3. hide accessKeys
+                // 4. clean up code
 
             })
             .catch(() => {
