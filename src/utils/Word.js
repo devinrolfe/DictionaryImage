@@ -8,7 +8,7 @@ export default class Word extends React.Component {
         this.state = {
             id: props.id,
             word: props.word,
-            definition: "",
+            definition: props.definition || "",
             x: props.x,
             y: props.y,
             width: props.width,
@@ -28,6 +28,7 @@ export default class Word extends React.Component {
                 strokeWidth="1"
                 fill="#14de54"
                 fillOpacity="0.3"
+                onPress={() => alert(this.state.definition)}
             />
         );
     }

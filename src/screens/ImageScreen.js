@@ -68,10 +68,11 @@ export default class ImageScreen extends React.Component {
         });
     };
 
-    loadDefinitionsOfWords() {
+    async loadDefinitionsOfWords() {
         if (this.state.words) {
-            const updatedWords = this.state.words.map((word, index) => {
-                let definitionOfWord = this.dictionaryClient.getWordDefinition(word.state.word);
+
+            const updatedWords = await Promise.all(this.state.words.map(async (word, index) => {
+                let definitionOfWord = await this.dictionaryClient.getWordDefinition(word.state.word);
 
                 return new Word({
                     id: index,
@@ -82,7 +83,8 @@ export default class ImageScreen extends React.Component {
                     width: word.state.width,
                     height: word.state.height
                 });
-            });
+            }));
+
             this.setState({words: updatedWords});
         }
     }
@@ -116,6 +118,7 @@ export default class ImageScreen extends React.Component {
 
                 // TODO:
                 // 1. show definition of word when clicked in Image
+                    // might need to use modal - https://docs.expo.io/versions/latest/react-native/modal/
                 // 2. Fix orientation image being taken if possible
                 // 3. hide accessKeys
                 // 4. clean up code

@@ -23,14 +23,18 @@ export default class RekognitionClient {
                 console.log("Good Call");
                 // console.log(data);
 
-                data.TextDetections.forEach(function(textDetection) {
-                    console.log(textDetection.DetectedText);
-                });
+                // data.TextDetections.forEach(function(textDetection) {
+                //     console.log(textDetection.DetectedText);
+                // });
 
                 // filter for type Word, then transform into new object
                 const words = data.TextDetections
                     .filter(textDetection => textDetection.Type === 'WORD')
                     .map((textDetection, index) => {
+
+                        console.log(textDetection.DetectedText);
+
+
                         return new Word({
                             id: index,
                             word: textDetection.DetectedText,
