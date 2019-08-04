@@ -6,6 +6,8 @@ import { Entypo } from '@expo/vector-icons';
 import { Buffer } from 'buffer';
 import Loader from "../utils/Loader";
 import RekognitionClient from "../clients/RekognitionClient";
+import DictionaryClient from "../clients/DictionaryClient";
+import Word from "../utils/Word";
 
 export default class ImageScreen extends React.Component {
 
@@ -38,6 +40,7 @@ export default class ImageScreen extends React.Component {
         this.snap = this.snap.bind(this);
         this.resetCamera = this.resetCamera.bind(this);
         this.rekognitionClient = new RekognitionClient();
+        this.dictionaryClient = new DictionaryClient();
     };
 
     async componentDidMount() {
@@ -65,6 +68,25 @@ export default class ImageScreen extends React.Component {
         });
     };
 
+    loadDefinitionsOfWords() {
+        if (this.state.words) {
+            const updatedWords = this.state.words.map((word, index) => {
+                let definitionOfWord = this.dictionaryClient.getWordDefinition(word.state.word);
+
+                return new Word({
+                    id: index,
+                    word: word.state.word,
+                    definition: definitionOfWord,
+                    x: word.state.x,
+                    y: word.state.y,
+                    width: word.state.width,
+                    height: word.state.height
+                });
+            });
+            this.setState({words: updatedWords});
+        }
+    }
+
     async snap() {
         if (this.camera) {
 
@@ -88,14 +110,12 @@ export default class ImageScreen extends React.Component {
                         wordsLoaded: true,
                         cameraReadyPosition: false,
                         imageTaken: photo.uri,
-                    });
-
-
+                    }, this.loadDefinitionsOfWords);
 
                 }.bind(this));
 
                 // TODO:
-                // 1. Need to get definitions of each word (only supporting english)
+                // 1. show definition of word when clicked in Image
                 // 2. Fix orientation image being taken if possible
                 // 3. hide accessKeys
                 // 4. clean up code

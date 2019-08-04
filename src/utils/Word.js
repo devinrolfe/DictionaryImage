@@ -8,6 +8,7 @@ export default class Word extends React.Component {
         this.state = {
             id: props.id,
             word: props.word,
+            definition: "",
             x: props.x,
             y: props.y,
             width: props.width,
