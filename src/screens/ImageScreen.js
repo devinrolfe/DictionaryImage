@@ -8,6 +8,7 @@ import Loader from "../utils/Loader";
 import RekognitionClient from "../clients/RekognitionClient";
 import DictionaryClient from "../clients/DictionaryClient";
 import Word from "../utils/Word";
+import Overlay from 'react-native-modal-overlay';
 
 export default class ImageScreen extends React.Component {
 
@@ -35,12 +36,19 @@ export default class ImageScreen extends React.Component {
             imageTaken: null,
             wordsLoaded: false,
             words: null,
+            currentWord: null,
+            currentWordDefinition: null,
+            modalVisible: false
         };
 
-        this.snap = this.snap.bind(this);
-        this.resetCamera = this.resetCamera.bind(this);
         this.rekognitionClient = new RekognitionClient();
         this.dictionaryClient = new DictionaryClient();
+
+        this.snap = this.snap.bind(this);
+        this.updateCurrentWordAndCurrentDefinitionAndShowModal = this.updateCurrentWordAndCurrentDefinitionAndShowModal.bind(this);
+        this.setModalVisible = this.setModalVisible.bind(this);
+        this.resetCamera = this.resetCamera.bind(this);
+
     };
 
     async componentDidMount() {
@@ -57,6 +65,18 @@ export default class ImageScreen extends React.Component {
         });
     };
 
+    updateCurrentWordAndCurrentDefinitionAndShowModal(word, definition) {
+        this.setState({
+            currentWord: word,
+            currentWordDefinition: definition,
+            modalVisible: true,
+        });
+    }
+
+    setModalVisible(visible) {
+        this.setState({ modalVisible: visible });
+    }
+
     resetCamera = () => {
         console.log("reset camera");
         this.setState({
@@ -71,6 +91,8 @@ export default class ImageScreen extends React.Component {
     async loadDefinitionsOfWords() {
         if (this.state.words) {
 
+            const updateCurrentWordAndCurrentDefinitionAndShowModal = this.updateCurrentWordAndCurrentDefinitionAndShowModal;
+
             const updatedWords = await Promise.all(this.state.words.map(async (word, index) => {
                 let definitionOfWord = await this.dictionaryClient.getWordDefinition(word.state.word);
 
@@ -81,7 +103,8 @@ export default class ImageScreen extends React.Component {
                     x: word.state.x,
                     y: word.state.y,
                     width: word.state.width,
-                    height: word.state.height
+                    height: word.state.height,
+                    updateCurrentWordAndCurrentDefinition: updateCurrentWordAndCurrentDefinitionAndShowModal,
                 });
             }));
 
@@ -117,11 +140,9 @@ export default class ImageScreen extends React.Component {
                 }.bind(this));
 
                 // TODO:
-                // 1. show definition of word when clicked in Image
-                    // might need to use modal - https://docs.expo.io/versions/latest/react-native/modal/
-                // 2. Fix orientation image being taken if possible
-                // 3. hide accessKeys
-                // 4. clean up code
+                // 1. Fix orientation image being taken if possible
+                // 2. hide accessKeys
+                // 3. clean up code
 
             })
             .catch(() => {
@@ -160,17 +181,16 @@ export default class ImageScreen extends React.Component {
             return (
                 <View>
                     <ImageBackground source={{uri: this.state.imageTaken}} style={{width: '100%', height: '100%'}}>
-
-                        <Svg key={this.state.id} height="100%" width="100%">
+                        <Svg height="100%" width="100%">
                             {this.state.words.map(word => word.render())}
                         </Svg>
-
-                        {/* Need rewind button */}
-
                     </ImageBackground>
+
+                    <Overlay visible={this.state.modalVisible} onClose={() => this.setModalVisible(false)} closeOnTouchOutside>
+                        <Text h1>{this.state.currentWord}</Text>
+                        <Text>{this.state.currentWordDefinition}</Text>
+                    </Overlay>
                 </View>
-
-
             )
         }
         // if camera is ready for picture taken

@@ -14,7 +14,15 @@ export default class Word extends React.Component {
             width: props.width,
             height: props.height,
         };
+        this.updateCurrentWordAndCurrentDefinition = props.updateCurrentWordAndCurrentDefinition;
+
+        this.callUpdateCurrentWordAndCurrentDefinition = this.callUpdateCurrentWordAndCurrentDefinition.bind(this);
     };
+
+
+    callUpdateCurrentWordAndCurrentDefinition() {
+        this.updateCurrentWordAndCurrentDefinition(this.state.word, this.state.definition);
+    }
 
     render() {
         return(
@@ -28,8 +36,9 @@ export default class Word extends React.Component {
                 strokeWidth="1"
                 fill="#14de54"
                 fillOpacity="0.3"
-                onPress={() => alert(this.state.definition)}
+                onPress={() => this.callUpdateCurrentWordAndCurrentDefinition()}
             />
+
         );
     }
 
