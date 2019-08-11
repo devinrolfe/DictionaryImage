@@ -1,6 +1,8 @@
+import sensitiveData from "../../sensitiveData";
+
 const awsRekognitionInfo = {
-    "accessKeyId": "***REMOVED***",
-    "secretAccessKey": "***REMOVED***",
+    "accessKeyId": sensitiveData.accessKeyId,
+    "secretAccessKey": sensitiveData.secretAccessKey,
     "region": "us-east-2"
 };
 

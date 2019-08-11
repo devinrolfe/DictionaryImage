@@ -14,4 +14,4 @@ projects:
         region: us-east-2
       endpoints:
         prod: >-
-          ***REMOVED***
+          https://cdayhl7zp5crvfm56r3of2t6me.appsync-api.us-east-2.amazonaws.com/graphql
