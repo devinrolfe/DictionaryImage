@@ -6,10 +6,7 @@ var AWS = require('aws-sdk');
 export default class RekognitionClient {
 
     constructor() {
-        // setup aws config
-        // TODO: accessKeyId, and secretAccessKey need to be encrypted.
         AWS.config.update(awsRekognitionInfo);
-
         this.rekognitionClient = new AWS.Rekognition();
     }
 

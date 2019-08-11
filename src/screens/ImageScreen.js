@@ -119,6 +119,7 @@ export default class ImageScreen extends React.Component {
             .then(photo => {
                 let buffer = new Buffer(photo.base64, 'base64');
 
+
                 let params = {
                     Image: {
                         Bytes: buffer
@@ -140,9 +141,7 @@ export default class ImageScreen extends React.Component {
                 }.bind(this));
 
                 // TODO:
-                // 1. Fix orientation image being taken if possible
-                // 2. hide accessKeys
-                // 3. clean up code
+                // 1. clean up code
 
             })
             .catch(() => {
