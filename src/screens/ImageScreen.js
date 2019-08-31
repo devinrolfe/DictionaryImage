@@ -14,7 +14,6 @@ export default class ImageScreen extends React.Component {
 
     static navigationOptions = ({ navigation }) => {
         return {
-            headerTitle: 'Image Screen',
             headerRight: (
                 <Button
                     onPress={() => navigation.getParam('resetCamera').call()}
@@ -229,24 +228,6 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: "center",
         justifyContent: "center"
-    },
-    resetScreenButton: {
-        marginRight:40,
-        marginLeft:40,
-        marginTop:10,
-        paddingTop:10,
-        paddingBottom:10,
-        backgroundColor:'#000',
-        borderRadius:10,
-        borderWidth: 1,
-        borderColor: '#fff'
-    },
-    resetText: {
-        color:'#fff',
-        textAlign:'center',
-        paddingLeft : 10,
-        paddingRight : 10
-    },
-
+    }
 });
 
