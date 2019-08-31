@@ -14,20 +14,10 @@ export default class RekognitionClient {
 
         return this.rekognitionClient.detectText(params).promise()
             .then(function(data) {
-                console.log("Good Call");
-                // console.log(data);
-
-                // data.TextDetections.forEach(function(textDetection) {
-                //     console.log(textDetection.DetectedText);
-                // });
-
                 // filter for type Word, then transform into new object
                 const words = data.TextDetections
                     .filter(textDetection => textDetection.Type === 'WORD')
                     .map((textDetection, index) => {
-
-                        console.log(textDetection.DetectedText);
-
 
                         return new Word({
                             id: index,
@@ -41,7 +31,6 @@ export default class RekognitionClient {
                 return words;
             }).
             catch(function(err) {
-                console.log("Bad Call");
                 console.log(err);
             });
     }

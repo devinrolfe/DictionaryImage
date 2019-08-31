@@ -48,6 +48,9 @@ export default class ImageScreen extends React.Component {
         this.setModalVisible = this.setModalVisible.bind(this);
         this.resetCamera = this.resetCamera.bind(this);
 
+        this.getRenderPictureTaken = this.getRenderPictureTaken.bind(this);
+        this.getRenderCameraReady = this.getRenderCameraReady.bind(this);
+        this.isPictureTaken = this.isPictureTaken.bind(this);
     };
 
     async componentDidMount() {
@@ -64,27 +67,130 @@ export default class ImageScreen extends React.Component {
         });
     };
 
-    updateCurrentWordAndCurrentDefinitionAndShowModal(word, definition) {
-        this.setState({
-            currentWord: word,
-            currentWordDefinition: definition,
-            modalVisible: true,
-        });
-    }
-
-    setModalVisible(visible) {
-        this.setState({ modalVisible: visible });
-    }
-
     resetCamera = () => {
-        console.log("reset camera");
         this.setState({
             cameraReadyPosition: true,
             isLoading: false,
             wordsLoaded: false,
-        }, function() {
-            console.log(this.state.cameraReadyPosition);
         });
+    };
+
+    render() {
+        const {navigate} = this.props.navigation;
+
+        if (this.state.isLoading) {
+            return (
+                <View style={styles.loadingContainer}>
+                    <Loader />
+                </View>
+            );
+        }
+
+        if (this.isPictureTaken()) {
+            return this.getRenderPictureTaken();
+        }
+        const { hasCameraPermission } = this.state;
+        if (hasCameraPermission === null) {
+            return (<View />);
+        } else if (hasCameraPermission === false) {
+            return (<Text>No access to camera</Text>);
+        } else {
+            return this.getRenderCameraReady();
+        }
+    };
+
+    isPictureTaken() {
+        return this.state.imageTaken && !this.state.cameraReadyPosition && this.state.wordsLoaded;
+    };
+
+    getRenderPictureTaken() {
+        return (
+            <View>
+                <ImageBackground source={{uri: this.state.imageTaken}} style={{width: '100%', height: '100%'}}>
+                    <Svg height="100%" width="100%">
+                        {this.state.words.map(word => word.render())}
+                    </Svg>
+                </ImageBackground>
+
+                <Overlay visible={this.state.modalVisible} onClose={() => this.setModalVisible(false)} closeOnTouchOutside>
+                    <Text h1>{this.state.currentWord}</Text>
+                    <Text>{this.state.currentWordDefinition}</Text>
+                </Overlay>
+            </View>
+        )
+    };
+
+    setModalVisible(visible) {
+        this.setState({ modalVisible: visible });
+    };
+
+    getRenderCameraReady() {
+        return (
+            <View style={{flex: 1,}}>
+                <Camera
+                    style={{flex: 1,}}
+                    type={this.state.type}
+                    ref={ref => { this.camera = ref; }}>
+                    <View style={{flex: 9,}}></View>
+                    <TouchableOpacity
+                        style={{
+                            alignItems:'center',
+                            flex: 1,
+                        }}
+                        onPress={this.snap}
+                    >
+                        <Entypo name="circle" size={64} color="white" />
+                    </TouchableOpacity>
+                    <View style={{flex: 0.2,}}></View>
+                </Camera>
+            </View>
+        );
+    };
+
+    async snap() {
+        if (this.camera) {
+
+            this.camera.takePictureAsync({ quality: 0.5, base64: true })
+                .then(photo => {
+                    let buffer = new Buffer(photo.base64, 'base64');
+
+
+                    let params = {
+                        Image: {
+                            Bytes: buffer
+                        }
+                    };
+
+                    const detectedTexts = this.rekognitionClient.detectTexts(params, this.state.dimensions.width, this.state.dimensions.height);
+
+                    detectedTexts.then(function(words) {
+
+                        this.setState({
+                            isLoading: false,
+                            words: words,
+                            wordsLoaded: true,
+                            cameraReadyPosition: false,
+                            imageTaken: photo.uri,
+                        }, this.loadDefinitionsOfWords);
+
+                    }.bind(this));
+                })
+                .catch(() => {
+                    Alert.alert("Oops, try again!");
+
+                    this.setState({
+                        isLoading: false,
+                        cameraReadyPosition: true,
+                        imageTaken: null,
+                    });
+                });
+
+            // should do loading. This is being done before async is done
+            this.setState({
+                isLoading: true,
+            })
+
+        }
     };
 
     async loadDefinitionsOfWords() {
@@ -109,118 +215,16 @@ export default class ImageScreen extends React.Component {
 
             this.setState({words: updatedWords});
         }
-    }
-
-    async snap() {
-        if (this.camera) {
-
-            this.camera.takePictureAsync({ quality: 0.5, base64: true })
-            .then(photo => {
-                let buffer = new Buffer(photo.base64, 'base64');
-
-
-                let params = {
-                    Image: {
-                        Bytes: buffer
-                    }
-                };
-
-                const detectedTexts = this.rekognitionClient.detectTexts(params, this.state.dimensions.width, this.state.dimensions.height);
-
-                detectedTexts.then(function(words) {
-
-                    this.setState({
-                        isLoading: false,
-                        words: words,
-                        wordsLoaded: true,
-                        cameraReadyPosition: false,
-                        imageTaken: photo.uri,
-                    }, this.loadDefinitionsOfWords);
-
-                }.bind(this));
-
-                // TODO:
-                // 1. clean up code
-
-            })
-            .catch(() => {
-                Alert.alert("Oops, try again!");
-
-                this.setState({
-                    isLoading: false,
-                    cameraReadyPosition: true,
-                    imageTaken: null,
-                });
-            });
-
-            // should do loading. This is being done before async is done
-            this.setState({
-                isLoading: true,
-            })
-
-        }
     };
 
-    render() {
-        const {navigate} = this.props.navigation;
-
-        // is Loading
-        if (this.state.isLoading) {
-            return (
-                <View style={styles.loadingContainer}>
-                    <Loader />
-                </View>
-            );
-        }
-
-        // if picture taken
-        if (this.state.imageTaken && !this.state.cameraReadyPosition && this.state.wordsLoaded) {
-
-            return (
-                <View>
-                    <ImageBackground source={{uri: this.state.imageTaken}} style={{width: '100%', height: '100%'}}>
-                        <Svg height="100%" width="100%">
-                            {this.state.words.map(word => word.render())}
-                        </Svg>
-                    </ImageBackground>
-
-                    <Overlay visible={this.state.modalVisible} onClose={() => this.setModalVisible(false)} closeOnTouchOutside>
-                        <Text h1>{this.state.currentWord}</Text>
-                        <Text>{this.state.currentWordDefinition}</Text>
-                    </Overlay>
-                </View>
-            )
-        }
-        // if camera is ready for picture taken
-        const { hasCameraPermission } = this.state;
-
-        if (hasCameraPermission === null) {
-            return (<View />);
-        } else if (hasCameraPermission === false) {
-            return (<Text>No access to camera</Text>);
-        } else {
-            return (
-                <View style={{flex: 1,}}>
-                    <Camera
-                        style={{flex: 1,}}
-                        type={this.state.type}
-                        ref={ref => { this.camera = ref; }}>
-                        <View style={{flex: 9,}}></View>
-                        <TouchableOpacity
-                            style={{
-                                alignItems:'center',
-                                flex: 1,
-                            }}
-                            onPress={this.snap}
-                        >
-                            <Entypo name="circle" size={64} color="white" />
-                        </TouchableOpacity>
-                        <View style={{flex: 0.2,}}></View>
-                    </Camera>
-                </View>
-            )
-        }
+    updateCurrentWordAndCurrentDefinitionAndShowModal(word, definition) {
+        this.setState({
+            currentWord: word,
+            currentWordDefinition: definition,
+            modalVisible: true,
+        });
     };
+
 };
 
 const styles = StyleSheet.create({
