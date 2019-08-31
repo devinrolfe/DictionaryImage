@@ -154,7 +154,6 @@ export default class ImageScreen extends React.Component {
                 .then(photo => {
                     let buffer = new Buffer(photo.base64, 'base64');
 
-
                     let params = {
                         Image: {
                             Bytes: buffer
@@ -175,9 +174,8 @@ export default class ImageScreen extends React.Component {
 
                     }.bind(this));
                 })
-                .catch(() => {
-                    Alert.alert("Oops, try again!");
-
+                .catch((e) => {
+                    console.log(e);
                     this.setState({
                         isLoading: false,
                         cameraReadyPosition: true,
